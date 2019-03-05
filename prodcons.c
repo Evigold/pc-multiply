@@ -69,7 +69,7 @@ void *prod_worker(void *arg)
     }
     put(i);
     pthread_cond_signal(&fill);
-    pthread_cond_unlock(&mutex);
+    pthread_mutex_unlock(&mutex);
 }
 
 // Matrix CONSUMER worker thread
