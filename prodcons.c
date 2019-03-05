@@ -32,16 +32,20 @@ pthread_cond_t fill = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // Producer consumer data structures
+ProdConsStats pcStats;
+
 
 // Bounded buffer bigmatrix defined in prodcons.h
-//Matrix ** bigmatrix;
+Matrix ** bigmatrix;
 
 // Bounded buffer put() get()
 int put(Matrix * value)
 {
-  buffer[fill_ptr] = value;
-  fill_ptr = (fill_ptr + 1) % MAX;
-  count++;
+  buffer[fill_ptr] = AllocMatrix(2, 2);
+  use_ptr = fill_ptr; //Lock issue here, need to update the use pointer to use a made matrix.
+  GenMatrix(buffer[fill_ptr]);
+  fill_ptr = (fill_ptr + sizeof(Matrix *)) % (MAX * sizeof(Matrix *));
+  
 }
 
 Matrix * get() 
@@ -60,7 +64,8 @@ void *prod_worker(void *arg)
     {
       pthread_mutex_lock(&mutex);
       while (count == MAX)
-        pthread_cond_wait(&empty, &mutex);
+        pthread_cond_wait(&empty, &mutex); //Condition should be "there's room"
+        //put();
     }
     put(i);
     pthread_cond_signal(&fill);
@@ -75,7 +80,8 @@ void *cons_worker(void *arg)
   {
     pthread_mutex_lock(&mutex);
     while (count == 0)
-      pthread_cond_wait(&fill, &mutex);
+      pthread_cond_wait(&fill, &mutex); //Condition is "2 or more matrix in bb"
+      //get();
     int tmp = get();
     pthread_cond_signal(&empty);
     pthread_mutex_unlock(&mutex);
