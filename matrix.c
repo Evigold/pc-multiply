@@ -43,7 +43,6 @@ Matrix * AllocMatrix(int r, int c)
 void FreeMatrix(Matrix * mat)
 {
   int r = mat->rows;
-  //int c = mat->cols;
   int **a = mat->m;
   int i;
   for (i=0; i<r; i++)

@@ -85,7 +85,6 @@ int main(int argc, char *argv[])
 
 
   //Pointer to pointer matrix
-  //Initialized here and passed to worker threads?
   bigmatrix = (Matrix **)malloc(sizeof(Matrix *) * BOUNDED_BUFFER_SIZE);
 
 
@@ -100,30 +99,30 @@ int main(int argc, char *argv[])
   //
   // DELETE THIS CODE ON ASSIGNMENT 2 SUBMISSION
   // ----------------------------------------------------------
-  printf("MATRIX MULTIPLICATION DEMO:\n\n");
-  Matrix *m1, *m2, *m3;
-  for (int i = 0; i < NUMBER_OF_MATRICES; i++)
-  {
-    m1 = GenMatrixRandom();
-    m2 = GenMatrixRandom();
-    m3 = MatrixMultiply(m1, m2);
-    if (m3 != NULL)
-    {
-      DisplayMatrix(m1, stdout);
-      printf("    X\n");
-      DisplayMatrix(m2, stdout);
-      printf("    =\n");
-      DisplayMatrix(m3, stdout);
-      printf("\n");
-      FreeMatrix(m3);
-      FreeMatrix(m2);
-      FreeMatrix(m1);
-      m1 = NULL;
-      m2 = NULL;
-      m3 = NULL;
-    }
-  }
-  return 0;
+  // printf("MATRIX MULTIPLICATION DEMO:\n\n");
+  // Matrix *m1, *m2, *m3;
+  // for (int i = 0; i < NUMBER_OF_MATRICES; i++)
+  // {
+  //   m1 = GenMatrixRandom();
+  //   m2 = GenMatrixRandom();
+  //   m3 = MatrixMultiply(m1, m2);
+  //   if (m3 != NULL)
+  //   {
+  //     DisplayMatrix(m1, stdout);
+  //     printf("    X\n");
+  //     DisplayMatrix(m2, stdout);
+  //     printf("    =\n");
+  //     DisplayMatrix(m3, stdout);
+  //     printf("\n");
+  //     FreeMatrix(m3);
+  //     FreeMatrix(m2);
+  //     FreeMatrix(m1);
+  //     m1 = NULL;
+  //     m2 = NULL;
+  //     m3 = NULL;
+  //   }
+  // }
+  // return 0;
   // ----------------------------------------------------------
 
   printf("Producing %d matrices in mode %d.\n", NUMBER_OF_MATRICES, MATRIX_MODE);
@@ -143,19 +142,24 @@ int main(int argc, char *argv[])
   // consume ProdConsStats from producer and consumer threads
   // add up total matrix stats in prs, cos, prodtot, constot, consmul
 
- 
   ProdConsStats pcStats;
-  // counters_t counters;
-  // init_cnt(counters.cons);
+  counter_t prodCount;
+  counter_t conCount;
+  init_cnt(&prodCount);
+  init_cnt(&conCount);
+
+  pcStats.prodCount = &prodCount;
+  pcStats.conCount = &conCount;
+
+  counters_t counters;
+  // init_cnt(counters.prod);
   // init_cnt(counters.prod);
 
-
+  // pcStats.counters = &counters;
 
   //Pass pcStats to threads to track overall work.
-  pthread_create(&p1, NULL, prod_worker, &pcStats);
-  pthread_create(&c1, NULL, cons_worker, &pcStats);
-
-
+  // pthread_create(&p1, NULL, prod_worker, &pcStats);
+  // pthread_create(&c1, NULL, cons_worker, &pcStats);
 
   printf("Sum of Matrix elements --> Produced=%d = Consumed=%d\n", prs, cos);
   printf("Matrices produced=%d consumed=%d multiplied=%d\n", prodtot, constot, consmul);
