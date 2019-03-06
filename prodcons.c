@@ -81,9 +81,9 @@ void *prod_worker(counter_t *prodCount)
       pthread_mutex_lock(&mutex);
       
       printf("HERE%d\n", producing);
-      producing = prodCount->value;
+      producing = get_cnt(prodCount);
       printf("HERE%d\n", producing);
-      // increment_cnt(pcStats.conCount);
+      increment_cnt(prodCount);
       // producing = pcStats.prodCount->value;
       // printf("HERE%d\n", producing);
       
@@ -108,6 +108,7 @@ void *cons_worker(counter_t *conCount)
   for (i = 0; i < loops; i++) 
   {
     pthread_mutex_lock(&mutex);
+    increment_cnt(conCount);
     while (conCount->value == 1) 
       pthread_cond_wait(&full, &mutex); //Condition is "2 or more matrix in bb"
 
