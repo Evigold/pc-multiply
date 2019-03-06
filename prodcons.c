@@ -70,36 +70,40 @@ Matrix * get()
 }
 
 // Matrix PRODUCER worker thread
-void *prod_worker(void *prodCount)
+void *prod_worker(void *counters)
 {
-    int i;
-    for (i = 0; i < loops; i++) {
-      pthread_mutex_lock(&mutex);
-      
-      while (!(fill_ptr < BOUNDED_BUFFER_SIZE)) {//This needs to be a different check.
-        pthread_cond_wait(&empty, &mutex); //Condition should be "there's room"
-      }
-      // printf("out of while\n");
-      Matrix * mat = AllocMatrix(2, 2);  //Get matrix mode here!
-      put(mat);
-      if (fill_ptr > 1) {
-         pthread_cond_signal(&full);
-      }
-     
-      pthread_mutex_unlock(&mutex);
-      increment_cnt(prodCount);
-      printf("produced: %d\n", get_cnt(prodCount));
+  counters_t* c = (counters_t*)counters;
+  
+  int i;
+  for (i = 0; i < loops; i++) {
+    pthread_mutex_lock(&mutex);
+    
+    while (!(fill_ptr < BOUNDED_BUFFER_SIZE)) {//This needs to be a different check.
+      pthread_cond_wait(&empty, &mutex); //Condition should be "there's room"
     }
-    // pthread_cond_wait(&empty, &mutex);
-    // void *status = NULL;
-    pthread_join(pthread_self(), NULL);
-    printf("done2");
-    return 0;
+    // printf("out of while\n");
+    Matrix * mat = AllocMatrix(2, 2);  //Get matrix mode here!
+    put(mat);
+    if (fill_ptr > 1) {
+        pthread_cond_signal(&full);
+    }
+    
+    pthread_mutex_unlock(&mutex);
+    increment_cnt(c->prod);
+    printf("produced: %d\n", get_cnt(c->prod));
+  }
+  // pthread_cond_wait(&empty, &mutex);
+  // void *status = NULL;
+  pthread_join(pthread_self(), NULL);
+  pthread_exit(NULL);
+  // printf("done2");
+  return 0;
 }
 
 // Matrix CONSUMER worker thread
-void *cons_worker(void *conCount)
+void *cons_worker(void *counters)
 {
+  counters_t* c = (counters_t*)counters;
   int i;
    for (i = 0; i < loops; i++) 
   {
@@ -107,17 +111,18 @@ void *cons_worker(void *conCount)
     while (!(fill_ptr >= 2)) 
       pthread_cond_wait(&full, &mutex); //Condition is "2 or more matrix in bb"
     Matrix * m1 = get(); //Need to get two matrices! and multiply/ return them...
-    increment_cnt(conCount);
+    increment_cnt(c->cons);
     Matrix * m2 = get();
-    increment_cnt(conCount);
+    increment_cnt(c->cons);
     if(m1->rows != m2->cols) {
       FreeMatrix(m2);
       m2 = get();
-      increment_cnt(conCount);
+      increment_cnt(c->cons);
     }
     
     Matrix * m3 = MatrixMultiply(m1, m2);
     if (m3 != NULL){
+      increment_cnt(c->mult);
       DisplayMatrix(m1, stdout);
       printf("    X\n");
       DisplayMatrix(m2, stdout);
@@ -125,7 +130,7 @@ void *cons_worker(void *conCount)
       DisplayMatrix(m3, stdout);
       printf("\n");
     }
-    printf("consumed: %d\n", get_cnt(conCount));
+    printf("consumed: %d\n", get_cnt(c->cons));
     FreeMatrix(m3);
     FreeMatrix(m2);
     FreeMatrix(m1);
@@ -135,8 +140,9 @@ void *cons_worker(void *conCount)
     pthread_cond_signal(&empty);
   }
   // pthread_cond_wait(&full, &mutex);
-  // printf("done\n");
-  pthread_join(pthread_self(), NULL);
+  printf("done\n");
+  pthread_exit(NULL);
+  // pthread_join(pthread_self(), NULL);
   // printf("done\n");
   return 0;
 }
