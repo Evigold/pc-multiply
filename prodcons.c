@@ -79,15 +79,17 @@ void *prod_worker(counter_t *prodCount)
     for (i = 0; i < loops; i++) {
       pthread_mutex_lock(&mutex);
       
-      while (fill_ptr < BOUNDED_BUFFER_SIZE) {//This needs to be a different check.
+      while (!(fill_ptr < BOUNDED_BUFFER_SIZE)) {//This needs to be a different check.
         printf("while in prod before wait\n");
         pthread_cond_wait(&empty, &mutex); //Condition should be "there's room"
         printf("while in prod after wait\n");
       }
-      printf("out of while\n");
+      // printf("out of while\n");
       Matrix * mat = AllocMatrix(2, 2);  //Get matrix mode here!
       put(mat);
-      pthread_cond_signal(&full);
+      if (fill_ptr > 1) {
+         pthread_cond_signal(&full);
+      }
       pthread_mutex_unlock(&mutex);
       increment_cnt(prodCount);
     }
@@ -103,9 +105,10 @@ void *cons_worker(counter_t *conCount)
     
   for (i = 0; i < loops; i++) 
   {
+    printf("%d \n", fill_ptr);
     pthread_mutex_lock(&mutex);
     printf("testinCon\n");
-    while (fill_ptr >= 2) 
+    while (!(fill_ptr >= 2)) 
       pthread_cond_wait(&full, &mutex); //Condition is "2 or more matrix in bb"
 
     Matrix * m1 = get(); //Need to get two matrices! and multiply/ return them...
