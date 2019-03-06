@@ -45,16 +45,15 @@ ProdConsStats pcStats;
 // Bounded buffer put() get()
 int put(Matrix * mat)
 {
-  
   if (&mat != NULL) {
     buffer[fill_ptr] = mat;
     use_ptr = fill_ptr; //Lock issue here, need to update the use pointer to use a made matrix.
     GenMatrix(buffer[fill_ptr]);
     fill_ptr = (fill_ptr + 1) % MAX;  
-    if (fill_ptr == BOUNDED_BUFFER_SIZE - 1) {
-      pthread_cond_signal(&full); //Room in buffer
-    } 
-    
+    // if (fill_ptr == BOUNDED_BUFFER_SIZE - 1) {
+    //   pthread_cond_signal(&full); //Room in buffer
+    // } 
+    pthread_cond_signal(&full); //Room in buffer
     return 1;
   }
   return 0;
@@ -77,13 +76,15 @@ void *prod_worker(void *arg)
     int i;
     for (i = 0; i < loops; i++) {
       pthread_mutex_lock(&mutex);
-      while (ready == MAX) //This needs to be a different check.
-        pthread_cond_wait(&full, &mutex); //Condition should be "there's room"
+      while (producing == 1) //This needs to be a different check.
+        pthread_cond_wait(&empty, &mutex); //Condition should be "there's room"
       Matrix * mat = AllocMatrix(2, 2);  //Get matrix mode here!
       put(mat);
+      pthread_cond_signal(&full);
+      pthread_mutex_unlock(&mutex);
       increment_cnt(pcStats.prodCount);
     }
-    pthread_mutex_unlock(&mutex);
+
     return 0;
 }
 
@@ -94,7 +95,7 @@ void *cons_worker(void *arg)
   for (i = 0; i < loops; i++) 
   {
     pthread_mutex_lock(&mutex);
-    while (count == 0) 
+    while (consuming == 1) 
       pthread_cond_wait(&full, &mutex); //Condition is "2 or more matrix in bb"
 
     Matrix * m1 = get(); //Need to get two matrices! and multiply/ return them...
@@ -117,7 +118,5 @@ void *cons_worker(void *arg)
     pthread_mutex_unlock(&mutex);
     
   }
-
   return 0;
 }
-
