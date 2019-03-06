@@ -22,7 +22,7 @@
 
 int count = 0;
 int loops = LOOPS;
-int buffer[MAX];
+Matrix * buffer[MAX];
 int fill_ptr = 0;
 int use_ptr = 0;
 int producing = 1;
@@ -30,10 +30,10 @@ int consuming = 0;
 
 
 // Define Locks and Condition variables here
-pthread_cond_t empty = PTHREAD_COND_INITIALIZER; //BB is empty.
-pthread_cond_t full = PTHREAD_COND_INITIALIZER;  //BB is full.
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t buflock = PTHREAD_MUTEX_INITIALIZER;  //Move a lock to get/put methods?
+pthread_cond_t empty;// = PTHREAD_COND_INITIALIZER; //BB is empty.
+pthread_cond_t full;// = PTHREAD_COND_INITIALIZER;  //BB is full.
+pthread_mutex_t mutex;// = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t buflock;// = PTHREAD_MUTEX_INITIALIZER;  //Move a lock to get/put methods?
 
 // Producer consumer data structures
 ProdConsStats pcStats;
@@ -45,13 +45,14 @@ ProdConsStats pcStats;
 // Bounded buffer put() get()
 int put(Matrix * mat)
 {
-  printf("lol");
-    
+  
   if (mat != NULL) {
     buffer[fill_ptr] = mat;
     use_ptr = fill_ptr; //Lock issue here, need to update the use pointer to use a made matrix.
+    
     GenMatrix(buffer[fill_ptr]);
-    // DisplayMatrix(buffer[fill_ptr], stdout);
+    DisplayMatrix(buffer[fill_ptr], stdout);
+    
     fill_ptr = (fill_ptr + 1) % MAX;  
     // if (fill_ptr == BOUNDED_BUFFER_SIZE - 1) {
     //   pthread_cond_signal(&full); //Room in buffer
@@ -80,9 +81,12 @@ void *prod_worker(counter_t *prodCount)
     for (i = 0; i < loops; i++) {
       pthread_mutex_lock(&mutex);
       
-      increment_cnt(prodCount);
-      while (get_cnt(prodCount) == 1) //This needs to be a different check.
+      // increment_cnt(prodCount);
+      while (get_cnt(prodCount) == 1) {//This needs to be a different check.
+        printf("lol\n");
         pthread_cond_wait(&empty, &mutex); //Condition should be "there's room"
+        printf("lol\n");
+      }
       Matrix * mat = AllocMatrix(2, 2);  //Get matrix mode here!
       put(mat);
       pthread_cond_signal(&full);
@@ -100,8 +104,9 @@ void *cons_worker(counter_t *conCount)
   for (i = 0; i < loops; i++) 
   {
     pthread_mutex_lock(&mutex);
-    increment_cnt(conCount);
-    while (get_cnt(conCount) == 1) 
+    // increment_cnt();
+    printf("conlool\n");
+    while (get_cnt(conCount) == 2) 
       pthread_cond_wait(&full, &mutex); //Condition is "2 or more matrix in bb"
 
     Matrix * m1 = get(); //Need to get two matrices! and multiply/ return them...
