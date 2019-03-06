@@ -132,6 +132,8 @@ int main(int argc, char *argv[])
 
   pthread_t p1;
   pthread_t c1;
+  pthread_t p2;
+  pthread_t c2;
 
   int prs = 0;
   int cos = 0;
@@ -166,6 +168,9 @@ int main(int argc, char *argv[])
   pthread_create(&p1, NULL, prod_worker, &counters);
   pthread_create(&c1, NULL, cons_worker, &counters);
 
+  pthread_create(&p2, NULL, prod_worker, &prodCount);
+  printf("test that things are moving past creation of prod thread\n");
+  pthread_create(&c2, NULL, cons_worker(&conCount), &pcStats);
   printf("Sum of Matrix elements --> Produced=%d = Consumed=%d\n", prs, cos);
   printf("Matrices produced=%d consumed=%d multiplied=%d\n", prodtot, constot, consmul);
 
