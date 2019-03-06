@@ -127,8 +127,8 @@ void *cons_worker(counter_t *conCount)
     pthread_mutex_unlock(&mutex);
 
     pthread_cond_signal(&empty);
-    increment_cnt(conCount);
-    increment_cnt(conCount);
+    // increment_cnt(conCount);
+    // increment_cnt(conCount);
     
   }
   return 0;
