@@ -70,7 +70,7 @@ Matrix * get()
 }
 
 // Matrix PRODUCER worker thread
-void *prod_worker(counter_t *prodCount)
+void *prod_worker(void *prodCount)
 {
     int i;
     for (i = 0; i < loops; i++) {
@@ -90,20 +90,19 @@ void *prod_worker(counter_t *prodCount)
       increment_cnt(prodCount);
       printf("produced: %d\n", get_cnt(prodCount));
     }
+    pthread_cond_wait(&empty, &mutex);
+    pthread_join(pthread_self, NULL);
 
     return 0;
 }
 
 // Matrix CONSUMER worker thread
-void *cons_worker(counter_t *conCount)
+void *cons_worker(void *conCount)
 {
   int i;
-  printf("testinCon\n");
-    
-  for (i = 0; i < loops; i++) 
+   for (i = 0; i < loops; i++) 
   {
     pthread_mutex_lock(&mutex);
-    printf("testinCon\n");
     while (!(fill_ptr >= 2)) 
       pthread_cond_wait(&full, &mutex); //Condition is "2 or more matrix in bb"
     Matrix * m1 = get(); //Need to get two matrices! and multiply/ return them...
@@ -111,10 +110,11 @@ void *cons_worker(counter_t *conCount)
     Matrix * m2 = get();
     increment_cnt(conCount);
     if(m1->rows != m2->cols) {
-      FreeMatrix(&m2);
+      FreeMatrix(m2);
       m2 = get();
       increment_cnt(conCount);
     }
+    
     Matrix * m3 = MatrixMultiply(m1, m2);
     if (m3 != NULL){
       DisplayMatrix(m1, stdout);
@@ -132,9 +132,8 @@ void *cons_worker(counter_t *conCount)
     pthread_mutex_unlock(&mutex);
 
     pthread_cond_signal(&empty);
-    // increment_cnt(conCount);
-    // increment_cnt(conCount);
-    
   }
+  pthread_cond_wait(&full, &mutex);
+  pthread_join(pthread_self, NULL);
   return 0;
 }

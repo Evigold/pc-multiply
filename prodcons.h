@@ -25,8 +25,8 @@ typedef struct prodcons {
 } ProdConsStats;
 
 // PRODUCER-CONSUMER thread method function prototypes
-void *prod_worker(counter_t *prodCount);
-void *cons_worker(counter_t *conCount);
+void *prod_worker(void *prodCount);
+void *cons_worker(void *conCount);
 
 // Routines to add and remove matrices from the bounded buffer
 int put(Matrix *value);

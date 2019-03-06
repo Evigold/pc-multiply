@@ -94,37 +94,8 @@ int main(int argc, char *argv[])
 
 
 
-  //
-  // Demonstration code to show the use of matrix routines
-  //
-  // DELETE THIS CODE ON ASSIGNMENT 2 SUBMISSION
-  // ----------------------------------------------------------
-  // printf("MATRIX MULTIPLICATION DEMO:\n\n");
-  // Matrix *m1, *m2, *m3;
-  // for (int i = 0; i < NUMBER_OF_MATRICES; i++)
-  // {
-  //   m1 = GenMatrixRandom();
-  //   m2 = GenMatrixRandom();
-  //   m3 = MatrixMultiply(m1, m2);
-  //   if (m3 != NULL)
-  //   {
-  //     DisplayMatrix(m1, stdout);
-  //     printf("    X\n");
-  //     DisplayMatrix(m2, stdout);
-  //     printf("    =\n");
-  //     DisplayMatrix(m3, stdout);
-  //     printf("\n");
-  //     FreeMatrix(m3);
-  //     FreeMatrix(m2);
-  //     FreeMatrix(m1);
-  //     m1 = NULL;
-  //     m2 = NULL;
-  //     m3 = NULL;
-  //   }
-  // }
-  // return 0;
-  // ----------------------------------------------------------
-
+  
+  
   printf("Producing %d matrices in mode %d.\n", NUMBER_OF_MATRICES, MATRIX_MODE);
   printf("Using a shared buffer of size=%d\n", BOUNDED_BUFFER_SIZE);
   printf("With %d producer and consumer thread(s).\n", numw);
@@ -132,13 +103,7 @@ int main(int argc, char *argv[])
 
   pthread_t prod[NUMWORK];
   pthread_t con[NUMWORK];
-  // pthread_t p1;
-  // pthread_t c1;
-  // pthread_t p2;
-  // pthread_t c2;
-
-  int prs = 0;
-  int cos = 0;
+  
   int prodtot = 0;
   int constot = 0;
   int consmul = 0;
@@ -150,35 +115,14 @@ int main(int argc, char *argv[])
   counter_t prodCount;
   counter_t conCount;
   init_cnt(&prodCount);
-  
-  // printf("%d", prodCount);
   init_cnt(&conCount);
 
-  // pcStats.prodCount = &prodCount;
   
-  // printf("%d", pcStats.prodCount->value);
-  // pcStats.conCount = &conCount;
-
-  // printf("%d", pcStats.conCount->value);
-  // counters_t counters;
-  // init_cnt(counters.prod);
-  // init_cnt(counters.prod);
-
-  // pcStats.counters = &counters;
-
-  //Pass pcStats to threads to track overall work.
-  // pthread_create(&p1, NULL, prod_worker, &prodCount);
-  // printf("test that things are moving past creation of prod thread\n");
-  // pthread_create(&c1, NULL, cons_worker(&conCount), &pcStats);
-
   for(int i = 0; i < NUMWORK; i++) {
     pthread_create(&prod[i], NULL, prod_worker, &prodCount);
-    printf("test that things are moving past creation of prod thread\n");
     pthread_create(&con[i], NULL, cons_worker(&conCount), &pcStats);
   }
-  // pthread_create(&p2, NULL, prod_worker, &prodCount);
-  // printf("test that things are moving past creation of prod thread\n");
-  // pthread_create(&c2, NULL, cons_worker(&conCount), &pcStats);
+  
   printf("Sum of Matrix elements --> Produced=%d = Consumed=%d\n", prodCount.value, conCount.value);
   printf("Matrices produced=%d consumed=%d multiplied=%d\n", prodtot, constot, consmul);
 
