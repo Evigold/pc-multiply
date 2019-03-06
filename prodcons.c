@@ -91,8 +91,9 @@ void *prod_worker(void *prodCount)
       printf("produced: %d\n", get_cnt(prodCount));
     }
     pthread_cond_wait(&empty, &mutex);
-    pthread_join(pthread_self, NULL);
-
+    void *status = NULL;
+    pthread_exit (&status);
+    printf("done2");
     return 0;
 }
 
@@ -134,6 +135,8 @@ void *cons_worker(void *conCount)
     pthread_cond_signal(&empty);
   }
   pthread_cond_wait(&full, &mutex);
-  pthread_join(pthread_self, NULL);
+  printf("done\n");
+  pthread_join(pthread_self(), NULL);
+  printf("done\n");
   return 0;
 }
