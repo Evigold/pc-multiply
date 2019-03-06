@@ -75,13 +75,16 @@ Matrix * get()
 }
 
 // Matrix PRODUCER worker thread
-void *prod_worker(counter_t *prodCount)
+void *prod_worker(void *counters)
 {
+  counters_t *p = (counters_t*)counters;
     int i;
     for (i = 0; i < loops; i++) {
       pthread_mutex_lock(&mutex);
-      
-      while (get_cnt(prodCount) == 2) {//This needs to be a different check.
+      printf("prodCount%d\n", p->prod->value);
+      increment_cnt(p->prod);
+      printf("prodCount%d\n", p->prod->value);
+      while ((get_cnt(p->prod)-get_cnt(p->cons)) >= 2) {//This needs to be a different check.
         printf("while in prod before wait\n");
         pthread_cond_wait(&empty, &mutex); //Condition should be "there's room"
         printf("while in prod after wait\n");
@@ -90,15 +93,16 @@ void *prod_worker(counter_t *prodCount)
       put(mat);
       pthread_cond_signal(&full);
       pthread_mutex_unlock(&mutex);
-      increment_cnt(prodCount);
+      increment_cnt(p->prod);
     }
 
     return 0;
 }
 
 // Matrix CONSUMER worker thread
-void *cons_worker(counter_t *conCount)
+void *cons_worker(void *counts)
 {
+  counters_t *c = (counters_t*)counts;
   int i;
   printf("testinCon\n");
     
@@ -106,7 +110,7 @@ void *cons_worker(counter_t *conCount)
   {
     pthread_mutex_lock(&mutex);
     printf("testinCon\n");
-    while (get_cnt(conCount) == 2) 
+    while (get_cnt(c->cons) >= 2) 
       pthread_cond_wait(&full, &mutex); //Condition is "2 or more matrix in bb"
 
     Matrix * m1 = get(); //Need to get two matrices! and multiply/ return them...
@@ -123,8 +127,8 @@ void *cons_worker(counter_t *conCount)
     FreeMatrix(m3);
     FreeMatrix(m2);
     FreeMatrix(m1);
-    increment_cnt(conCount);
-    increment_cnt(conCount);
+    increment_cnt(c->cons);
+    increment_cnt(c->cons);
     pthread_cond_signal(&empty);
     pthread_mutex_unlock(&mutex);
     
