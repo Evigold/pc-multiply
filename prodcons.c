@@ -80,17 +80,9 @@ void *prod_worker(counter_t *prodCount)
     for (i = 0; i < loops; i++) {
       pthread_mutex_lock(&mutex);
       
-      printf("HERE%d\n", producing);
-      producing = get_cnt(prodCount);
-      printf("HERE%d\n", producing);
       increment_cnt(prodCount);
-      // producing = pcStats.prodCount->value;
-      // printf("HERE%d\n", producing);
-      
-      while (prodCount->value == 1){ //This needs to be a different check.
+      while (get_cnt(prodCount) == 1) //This needs to be a different check.
         pthread_cond_wait(&empty, &mutex); //Condition should be "there's room"
-        printf("HERE%d\n", producing);
-      }      
       Matrix * mat = AllocMatrix(2, 2);  //Get matrix mode here!
       put(mat);
       pthread_cond_signal(&full);
@@ -109,7 +101,7 @@ void *cons_worker(counter_t *conCount)
   {
     pthread_mutex_lock(&mutex);
     increment_cnt(conCount);
-    while (conCount->value == 1) 
+    while (get_cnt(conCount) == 1) 
       pthread_cond_wait(&full, &mutex); //Condition is "2 or more matrix in bb"
 
     Matrix * m1 = get(); //Need to get two matrices! and multiply/ return them...
