@@ -117,11 +117,11 @@ int main(int argc, char *argv[])
   init_cnt(&prodCount);
   init_cnt(&conCount);
 
-  
+  // int a[2][NUMWORK];
   for(int i = 0; i < NUMWORK; i++) {
     pthread_create(&prod[i], NULL, prod_worker, &prodCount);
     pthread_create(&con[i], NULL, cons_worker(&conCount), &pcStats);
-    pthread_join(&prod[i], NULL);
+    // pthread_join(&prod[i], NULL);
   }
   
   printf("Sum of Matrix elements --> Produced=%d = Consumed=%d\n", prodCount.value, conCount.value);
