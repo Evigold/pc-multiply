@@ -8,7 +8,7 @@
  */
 
 // Number of worker threads - NUMWORK producers, NUMWORK consumers
-#define NUMWORK 3
+#define NUMWORK 1
 
 // Constant for enabling and disabling DEBUG output
 #define OUTPUT 0

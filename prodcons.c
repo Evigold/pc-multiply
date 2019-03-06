@@ -106,10 +106,15 @@ void *cons_worker(counter_t *conCount)
     printf("testinCon\n");
     while (!(fill_ptr >= 2)) 
       pthread_cond_wait(&full, &mutex); //Condition is "2 or more matrix in bb"
-    increment_cnt(conCount);
-    increment_cnt(conCount);
     Matrix * m1 = get(); //Need to get two matrices! and multiply/ return them...
+    increment_cnt(conCount);
     Matrix * m2 = get();
+    increment_cnt(conCount);
+    if(m1->rows != m2->cols) {
+      FreeMatrix(&m2);
+      m2 = get();
+      increment_cnt(conCount);
+    }
     Matrix * m3 = MatrixMultiply(m1, m2);
     if (m3 != NULL){
       DisplayMatrix(m1, stdout);

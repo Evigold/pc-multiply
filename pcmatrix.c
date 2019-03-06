@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
   // pthread_create(&p2, NULL, prod_worker, &prodCount);
   // printf("test that things are moving past creation of prod thread\n");
   // pthread_create(&c2, NULL, cons_worker(&conCount), &pcStats);
-  printf("Sum of Matrix elements --> Produced=%d = Consumed=%d\n", prs, cos);
+  printf("Sum of Matrix elements --> Produced=%d = Consumed=%d\n", prodCount.value, conCount.value);
   printf("Matrices produced=%d consumed=%d multiplied=%d\n", prodtot, constot, consmul);
 
 
