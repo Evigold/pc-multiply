@@ -81,7 +81,7 @@ void *prod_worker(counter_t *prodCount)
     for (i = 0; i < loops; i++) {
       pthread_mutex_lock(&mutex);
       
-      while (get_cnt(prodCount) == 1) {//This needs to be a different check.
+      while (get_cnt(prodCount) == 2) {//This needs to be a different check.
         printf("while in prod before wait\n");
         pthread_cond_wait(&empty, &mutex); //Condition should be "there's room"
         printf("while in prod after wait\n");
