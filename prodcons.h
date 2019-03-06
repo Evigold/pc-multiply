@@ -20,13 +20,13 @@ typedef struct prodcons {
   int sumtotal;
   int multtotal;
   int matrixtotal;
-  counter_t * prodCount;
-  counter_t * conCount;
+  // counter_t * prodCount;
+  // counter_t * conCount;
 } ProdConsStats;
 
 // PRODUCER-CONSUMER thread method function prototypes
-void *prod_worker(void *arg);
-void *cons_worker(void *arg);
+void *prod_worker(counter_t *prodCount);
+void *cons_worker(counter_t *conCount);
 
 // Routines to add and remove matrices from the bounded buffer
 int put(Matrix *value);

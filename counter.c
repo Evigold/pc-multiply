@@ -15,6 +15,7 @@
 // Include libraries required for this module only
 #include <stdio.h>
 #include <pthread.h>
+#include <stdlib.h>
 #include "counter.h"
 
 // SYNCHRONIZED COUNTER METHOD IMPLEMENTATION

@@ -146,20 +146,25 @@ int main(int argc, char *argv[])
   counter_t prodCount;
   counter_t conCount;
   init_cnt(&prodCount);
+  
+  // printf("%d", prodCount);
   init_cnt(&conCount);
 
-  pcStats.prodCount = &prodCount;
-  pcStats.conCount = &conCount;
+  // pcStats.prodCount = &prodCount;
+  
+  // printf("%d", pcStats.prodCount->value);
+  // pcStats.conCount = &conCount;
 
-  counters_t counters;
+  // printf("%d", pcStats.conCount->value);
+  // counters_t counters;
   // init_cnt(counters.prod);
   // init_cnt(counters.prod);
 
   // pcStats.counters = &counters;
 
   //Pass pcStats to threads to track overall work.
-  pthread_create(&p1, NULL, prod_worker, &pcStats);
-  pthread_create(&c1, NULL, cons_worker, &pcStats);
+  pthread_create(&p1, NULL, prod_worker(&prodCount), &pcStats);
+  pthread_create(&c1, NULL, cons_worker(&conCount), &pcStats);
 
   printf("Sum of Matrix elements --> Produced=%d = Consumed=%d\n", prs, cos);
   printf("Matrices produced=%d consumed=%d multiplied=%d\n", prodtot, constot, consmul);
