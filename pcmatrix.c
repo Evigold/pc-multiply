@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
 
   //Pass pcStats to threads to track overall work.
   pthread_create(&p1, NULL, prod_worker(&prodCount), &pcStats);
-  pthread_create(&c1, NULL, cons_worker(&conCount), &pcStats);
+  // pthread_create(&c1, NULL, cons_worker(&conCount), &pcStats);
 
   printf("Sum of Matrix elements --> Produced=%d = Consumed=%d\n", prs, cos);
   printf("Matrices produced=%d consumed=%d multiplied=%d\n", prodtot, constot, consmul);
