@@ -52,9 +52,6 @@ int put(Matrix * mat)
     
     GenMatrix(buffer[fill_ptr]);    
     fill_ptr = (fill_ptr + 1) % MAX;  
-    // if (fill_ptr == BOUNDED_BUFFER_SIZE - 1) {
-    //   pthread_cond_signal(&full); //Room in buffer
-    // } 
     pthread_cond_signal(&full); //Room in buffer
     return 1;
   }
@@ -80,9 +77,7 @@ void *prod_worker(counter_t *prodCount)
       pthread_mutex_lock(&mutex);
       
       while (!(fill_ptr < BOUNDED_BUFFER_SIZE)) {//This needs to be a different check.
-        printf("while in prod before wait\n");
         pthread_cond_wait(&empty, &mutex); //Condition should be "there's room"
-        printf("while in prod after wait\n");
       }
       // printf("out of while\n");
       Matrix * mat = AllocMatrix(2, 2);  //Get matrix mode here!
@@ -90,8 +85,10 @@ void *prod_worker(counter_t *prodCount)
       if (fill_ptr > 1) {
          pthread_cond_signal(&full);
       }
+     
       pthread_mutex_unlock(&mutex);
       increment_cnt(prodCount);
+      printf("produced: %d\n", get_cnt(prodCount));
     }
 
     return 0;
@@ -105,7 +102,6 @@ void *cons_worker(counter_t *conCount)
     
   for (i = 0; i < loops; i++) 
   {
-    printf("%d \n", fill_ptr);
     pthread_mutex_lock(&mutex);
     printf("testinCon\n");
     while (!(fill_ptr >= 2)) 
@@ -122,13 +118,16 @@ void *cons_worker(counter_t *conCount)
       DisplayMatrix(m3, stdout);
       printf("\n");
     }
+    printf("consumed: %d\n", get_cnt(conCount));
     FreeMatrix(m3);
     FreeMatrix(m2);
     FreeMatrix(m1);
-    increment_cnt(conCount);
-    increment_cnt(conCount);
-    pthread_cond_signal(&empty);
+ 
     pthread_mutex_unlock(&mutex);
+
+    pthread_cond_signal(&empty);
+    increment_cnt(conCount);
+    increment_cnt(conCount);
     
   }
   return 0;
