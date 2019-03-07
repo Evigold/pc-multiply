@@ -118,8 +118,8 @@ void *cons_worker(void *args)
     }
     
     Matrix * m1 = get();
-    addTo_cnt(stats->consSum, SumMatrix(m1));
     increment_cnt(stats->consCount);
+    addTo_cnt(stats->consSum, SumMatrix(m1));
     while (buf_size == 0) { 
       if(get_cnt(stats->consCount) >= NUMBER_OF_MATRICES) {
         pthread_cond_signal(&full);
@@ -129,14 +129,14 @@ void *cons_worker(void *args)
       pthread_cond_wait(&full, &mutex); 
     }
     
-    Matrix * m2 = get();
-    addTo_cnt(stats->consSum, SumMatrix(m2));
-    increment_cnt(stats->consCount);
+    Matrix * m2 = NULL;
+    // increment_cnt(stats->consCount);
+    // addTo_cnt(stats->consSum, SumMatrix(m2));
     
-    Matrix * m3 = MatrixMultiply(m1, m2);
+    Matrix * m3;// = MatrixMultiply(m1, m2);
 
-    while (m3 == NULL) {
-      FreeMatrix(m2);
+    do {
+      if(m2 != NULL)  FreeMatrix(m2);
     
       while (buf_size == 0) { 
         if(get_cnt(stats->consCount) >= NUMBER_OF_MATRICES) {
@@ -148,10 +148,10 @@ void *cons_worker(void *args)
       }
     
       m2 = get();
-      addTo_cnt(stats->consSum, SumMatrix(m2));
       increment_cnt(stats->consCount);
+      addTo_cnt(stats->consSum, SumMatrix(m2));
       m3 = MatrixMultiply(m1, m2);
-    }
+    } while (m3 == NULL);
     increment_cnt(stats->multCount);
     DisplayMatrix(m1, stdout);
     printf("    X\n");
