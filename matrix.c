@@ -42,6 +42,7 @@ Matrix * AllocMatrix(int r, int c)
 
 void FreeMatrix(Matrix * mat)
 {
+  printf("mat += %p", mat);
   int r = mat->rows;
   int **a = mat->m;
   int i;
@@ -172,6 +173,7 @@ int AvgElement(Matrix * mat) // int ** matrix, const int height, const int width
   int ele=0;
   int i, j;
   for (i=0; i<height; i++)
+    for (j=0; j<width; j++)
     for (j=0; j<width; j++)
     {
       int *mm = a[i];
