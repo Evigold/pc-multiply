@@ -19,17 +19,12 @@
 #include "pcmatrix.h"
 #include "prodcons.h"
 
-
-int count = 0;
-int loops = LOOPS;
-
+// Define buffer used to store the produced matrixies and for the consumer to retrieve from.
 Matrix * buffer[MAX];
+// Define variables that help
 int fill_ptr = 0;
 int use_ptr = 0;
 int buf_size = 0;
-int producing = 1;
-int consuming = 0;
-
 
 // Define Locks and Condition variables here
 pthread_cond_t empty = PTHREAD_COND_INITIALIZER; //BB is empty.
@@ -37,12 +32,6 @@ pthread_cond_t full = PTHREAD_COND_INITIALIZER;  //BB is full.
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t buflock = PTHREAD_MUTEX_INITIALIZER;  //Move a lock to get/put methods?
 
-// Producer consumer data structures
-ProdConsStats pcStats;
-
-// Bounded buffer bigmatrix defined in prodcons.h
-// Matrix ** bigmatrix;
-// bigmatrix is inmitialized in main... 
 
 // Bounded buffer put() get()
 int put(Matrix * mat)
@@ -81,7 +70,9 @@ void *prod_worker(void *args)
   counters_t *stats = (counters_t *)args;
   while(get_cnt(stats->prodCount) < NUMBER_OF_MATRICES) {
     pthread_mutex_lock(&mutex);
-    while (buf_size == MAX) {//This needs to be a different check.
+    // Check if buffer is full, if so, waits.
+    while (buf_size == MAX) {
+      // Checks if job has been finished while waiting. If so, ends thread(returns).
       if(get_cnt(stats->prodCount) >= NUMBER_OF_MATRICES) {
         pthread_cond_signal(&full);
         pthread_mutex_unlock  (&mutex);
@@ -105,8 +96,9 @@ void *cons_worker(void *args)
   counters_t *stats = (counters_t *)args;
   while(get_cnt(stats->consCount) < NUMBER_OF_MATRICES) {
     pthread_mutex_lock(&mutex);
-    
+    // Checks to see if buffer is empty. if so, waits.
     while (buf_size == 0) { 
+      // Checks if job has been finished while waiting. If so, ends thread(returns).
       if(get_cnt(stats->consCount) >= NUMBER_OF_MATRICES) {
         pthread_cond_signal(&full);
         pthread_mutex_unlock  (&mutex);
@@ -118,7 +110,9 @@ void *cons_worker(void *args)
     Matrix * m1 = get();
     increment_cnt(stats->consCount);
     addTo_cnt(stats->consSum, SumMatrix(m1));
+    // Checks to see if buffer is empty. if so, waits.
     while (buf_size == 0) { 
+      // Checks if job has been finished while waiting. If so, ends thread(returns).
       if(get_cnt(stats->consCount) >= NUMBER_OF_MATRICES || m1 == NULL) {
         pthread_cond_signal(&full);
         pthread_mutex_unlock  (&mutex);
@@ -129,9 +123,12 @@ void *cons_worker(void *args)
     
     Matrix * m2 = NULL;
     Matrix * m3;
-
+    // While loop that keeps on switching m2 matrix until it finds one compatible with m1
+    // to multiply.
     do {
+      // Checks to see if buffer is empty. if so, waits.
       while (buf_size == 0) { 
+      // Checks if job has been finished while waiting. If so, ends thread(returns).
         if(get_cnt(stats->consCount) >= NUMBER_OF_MATRICES || m2 == NULL) {
           pthread_cond_signal(&full);
           pthread_mutex_unlock  (&mutex);
@@ -145,6 +142,7 @@ void *cons_worker(void *args)
       addTo_cnt(stats->consSum, SumMatrix(m2));
       m3 = MatrixMultiply(m1, m2);
     } while (m3 == NULL);
+    
     increment_cnt(stats->multCount);
     DisplayMatrix(m1, stdout);
     printf("    X\n");

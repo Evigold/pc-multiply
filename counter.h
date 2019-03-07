@@ -15,6 +15,7 @@ typedef struct __counter_t {
   pthread_mutex_t  lock;
 } counter_t;
 
+// Counters struct that contains all the different statistics counters needed for the program.
 typedef struct __counters_t {
   counter_t * prodCount;
   counter_t * consCount;

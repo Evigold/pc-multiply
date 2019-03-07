@@ -21,24 +21,27 @@
 // SYNCHRONIZED COUNTER METHOD IMPLEMENTATION
 // Based on Three Easy Pieces
 
+// Initiates a counter. sets initial value to 0.
 void init_cnt(counter_t *c)  {
   c->value = 0;
   pthread_mutex_init(&c->lock, NULL);
 }
 
+// Increments the counter by 1.
 void increment_cnt(counter_t *c)  {
   pthread_mutex_lock(&c->lock);
   c->value++;
   pthread_mutex_unlock(&c->lock);
 }
 
-
+// INcrements the counter b the value passed.
 void addTo_cnt(counter_t *c, int n) {
   pthread_mutex_lock(&c->lock);
   c->value += n;
   pthread_mutex_unlock(&c->lock);
 }
 
+// returns an int of the value stored in the counter.
 int get_cnt(counter_t *c)  {
   pthread_mutex_lock(&c->lock);
   int rc = c->value;

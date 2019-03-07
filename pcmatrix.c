@@ -26,7 +26,9 @@
  *
  *  University of Washington, Tacoma
  *  TCSS 422 - Operating Systems
- *  Fall 2018
+ *  Winter 2019
+ *  Eviatar Goldschmidt
+ *  Scott Robertson
  */
 
 #include <stdio.h>
@@ -84,11 +86,7 @@ int main(int argc, char *argv[])
   } 
 
 
-  //Pointer to pointer matrix
-  bigmatrix = (Matrix **)malloc(sizeof(Matrix *) * BOUNDED_BUFFER_SIZE);
-
-
-  time_t t;
+   time_t t;
   // Seed the random number generator with the system time
   srand((unsigned)time(&t));
 
@@ -101,11 +99,13 @@ int main(int argc, char *argv[])
   printf("With %d producer and consumer thread(s).\n", numw);
   printf("\n");
 
+  // Declares an array of threads for both the producer and consumer threads.
   pthread_t prod[NUMWORK];
   pthread_t con[NUMWORK];
   
-  // consume ProdConsStats from producer and consumer threads
-  // add up total matrix stats in prs, cos, prodtot, constot, consmul
+  // Counters struct that will be passed to the threads as void *args.
+  // Keeps track of the count of matrixies produced, consumed and successfully multplied.
+  // Keeps track of the sum of teh elements of all the matrixies generated and consumed.
   counters_t stats;
   counter_t prodCount;
   counter_t conCount;
@@ -125,11 +125,12 @@ int main(int argc, char *argv[])
   stats.consSum = &conSum;
   stats.multCount = &multCount;
 
-  
+  // Creates all the threads.
   for(int i = 0; i < NUMWORK; i++) {
     pthread_create(&prod[i], NULL, prod_worker, &stats);
     pthread_create(&con[i], NULL, cons_worker, &stats);
   }
+  // Disposes of all the threads.
   for(int i = 0; i < NUMWORK; i++) {
     pthread_join(prod[i], NULL);
     pthread_join(con[i], NULL);
