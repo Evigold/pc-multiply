@@ -81,8 +81,7 @@ Matrix * get()
 void *prod_worker(void *args)
 {
   counters_t *stats = (counters_t *)args;
-  int i;
-  for(i = 0; i < LOOPS; i++) {//(get_cnt(stats->prodCount) < NUMBER_OF_MATRICES) {
+  while(get_cnt(stats->prodCount) < NUMBER_OF_MATRICES) {
     pthread_mutex_lock(&mutex);
     while (buf_size == MAX) {//This needs to be a different check.
       pthread_cond_wait(&empty, &mutex); //Condition should be "there's room"
@@ -100,7 +99,7 @@ void *prod_worker(void *args)
     pthread_mutex_unlock(&mutex);
     printf("produced: %d\n", get_cnt(stats->prodCount));
   }
-  printf("prod returns");
+  printf("prod returns --------------\n");
   return 0;
 }
 
@@ -111,14 +110,24 @@ void *cons_worker(void *args)
   printf("step1\n");
   int i;
   for(i = 0; i < LOOPS; i++) {//(get_cnt(stats->prodCount) < NUMBER_OF_MATRICES) {
-  //while(get_cnt(stats->consCount) < NUMBER_OF_MATRICES) {
+  // while(get_cnt(stats->consCount) < NUMBER_OF_MATRICES) {
     pthread_mutex_lock(&mutex);
     while (buf_size == 0 && i < LOOPS) 
       pthread_cond_wait(&full, &mutex); //Condition is "2 or more matrix in bb"
+    if(get_cnt(stats->consCount) >= NUMBER_OF_MATRICES) {
+      pthread_cond_signal(&full);
+      pthread_mutex_unlock  (&mutex);
+      break;
+    }
     Matrix * m1 = get();
     increment_cnt(stats->consCount);
     while (buf_size == 0 && i < LOOPS) 
       pthread_cond_wait(&full, &mutex);
+    if(get_cnt(stats->consCount) >= NUMBER_OF_MATRICES) {
+      pthread_cond_signal(&full);
+      pthread_mutex_unlock  (&mutex);
+      break;
+    }
     Matrix * m2 = get();
     increment_cnt(stats->consCount);
     
@@ -132,6 +141,11 @@ void *cons_worker(void *args)
       FreeMatrix(m2);
       while (buf_size == 0 && i < LOOPS) 
         pthread_cond_wait(&full, &mutex); 
+      if(get_cnt(stats->consCount) >= NUMBER_OF_MATRICES) {
+        pthread_cond_signal(&full);
+        pthread_mutex_unlock  (&mutex);
+        break;
+      }
       m2 = get();
       increment_cnt(stats->consCount);
       m3 = MatrixMultiply(m1, m2);
@@ -156,9 +170,7 @@ void *cons_worker(void *args)
     pthread_cond_signal(&empty);
     pthread_mutex_unlock(&mutex);
   }
-  printf("consumed: %d\n", get_cnt(stats->consCount));
-  printf("fill_ptr-final: %d \n", fill_ptr);
-  printf("user_ptr-final: %d \n", use_ptr);
-
+  
+  printf("con  returns --------------\n");
   return 0;
 }
