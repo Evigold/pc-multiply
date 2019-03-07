@@ -16,13 +16,17 @@ typedef struct __counter_t {
 } counter_t;
 
 typedef struct __counters_t {
-  counter_t * prod;
-  counter_t * cons;
+  counter_t * prodCount;
+  counter_t * consCount;
+  counter_t * prodSum;
+  counter_t * consSum;
+  counter_t * multCount;
 } counters_t;
 
 // counter methods
 void init_cnt(counter_t *c);
 void increment_cnt(counter_t *c);
+void addTo_cnt(counter_t *c, int n);
 int get_cnt(counter_t *c);
 
 

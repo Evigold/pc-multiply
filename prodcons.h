@@ -6,7 +6,6 @@
  *  TCSS 422 - Operating Systems
  *  Fall 2016
  */
-
 Matrix ** bigmatrix;
 
 // PRODUCER-CONSUMER put() get() function prototypes
@@ -17,9 +16,11 @@ Matrix ** bigmatrix;
 // matrixtotal - total number of matrces produced or consumed
 // counters, amount of produced matrices/ consumed matrices.
 typedef struct prodcons {
-  int sumtotal;
-  int multtotal;
-  int matrixtotal;
+  int prodCount;
+  int consCount;
+  int prodSum;
+  int consSum;
+  int multCount;
   // counter_t * prodCount;
   // counter_t * conCount;
 } ProdConsStats;
