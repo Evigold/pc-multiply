@@ -104,10 +104,6 @@ int main(int argc, char *argv[])
   pthread_t prod[NUMWORK];
   pthread_t con[NUMWORK];
   
-  int prodtot = 0;
-  int constot = 0;
-  int consmul = 0;
-
   // consume ProdConsStats from producer and consumer threads
   // add up total matrix stats in prs, cos, prodtot, constot, consmul
 
@@ -117,10 +113,22 @@ int main(int argc, char *argv[])
   counters_t stats;
   counter_t prodCount;
   counter_t conCount;
+  counter_t prodSum;
+  counter_t conSum;
+  counter_t multCount;
+  
   init_cnt(&prodCount);
   init_cnt(&conCount);
+  init_cnt(&prodSum);
+  init_cnt(&conSum);
+  init_cnt(&multCount);
+
   stats.prodCount = &prodCount;
   stats.consCount = &conCount;
+  stats.prodSum = &prodSum;
+  stats.consSum = &conSum;
+  stats.multCount = &multCount;
+
   // pcStats.prod = &prodCount;
   // pcStats.cons = & conCount;
 
@@ -129,12 +137,13 @@ int main(int argc, char *argv[])
     pthread_create(&prod[i], NULL, prod_worker, &stats);
     pthread_create(&con[i], NULL, cons_worker, &stats);
   }
+  printf("---------threads done---------\n");
   for(int i = 0; i < NUMWORK; i++) {
     pthread_join(prod[i], NULL);
     pthread_join(con[i], NULL);
   }
-  // printf("Sum of Matrix elements --> Produced=%d = Consumed=%d\n", prodCount.value, conCount.value);
-  printf("Matrices produced=%d consumed=%d multiplied=%d\n", prodtot, constot, consmul);
+  printf("Sum of Matrix elements --> Produced=%d = Consumed=%d\n", get_cnt(stats.prodSum), get_cnt(stats.consSum));
+  printf("Matrices produced=%d consumed=%d multiplied=%d\n", get_cnt(stats.prodCount), get_cnt(stats.consCount), get_cnt(stats.multCount));
 
 
   return 0;

@@ -55,8 +55,6 @@ int put(Matrix * mat)
       fill_ptr = (fill_ptr + 1) % MAX;  
       buf_size++;
     }    
-    printf("fill_ptr-put: %d \n", fill_ptr);
-    printf("use_ptr-put: %d \n", use_ptr);
   }
   pthread_mutex_unlock(&buflock);
   return 0;
@@ -92,6 +90,7 @@ void *prod_worker(void *args)
       break;
     }
     Matrix * mat = GenMatrixRandom();  //Get matrix mode here!
+    addTo_cnt(stats->prodSum, SumMatrix(mat));
     put(mat);
     increment_cnt(stats->prodCount);
     // pcStats->prodCount++;
@@ -99,7 +98,7 @@ void *prod_worker(void *args)
     pthread_mutex_unlock(&mutex);
     printf("produced: %d\n", get_cnt(stats->prodCount));
   }
-  printf("prod returns --------------\n");
+  printf("---------prod returns --------------\n");
   return 0;
 }
 
@@ -107,21 +106,23 @@ void *prod_worker(void *args)
 void *cons_worker(void *args)
 {
   counters_t *stats = (counters_t *)args;
-  printf("step1\n");
-  int i;
-  for(i = 0; i < LOOPS; i++) {//(get_cnt(stats->prodCount) < NUMBER_OF_MATRICES) {
-  // while(get_cnt(stats->consCount) < NUMBER_OF_MATRICES) {
+  // printf("step1\n");
+  while(get_cnt(stats->consCount) < NUMBER_OF_MATRICES) {
     pthread_mutex_lock(&mutex);
-    while (buf_size == 0 && i < LOOPS) 
+    while (buf_size == 0 && get_cnt(stats->consCount) < NUMBER_OF_MATRICES) {
       pthread_cond_wait(&full, &mutex); //Condition is "2 or more matrix in bb"
+    }
+    // printf("step2a\n");
     if(get_cnt(stats->consCount) >= NUMBER_OF_MATRICES) {
       pthread_cond_signal(&full);
       pthread_mutex_unlock  (&mutex);
       break;
     }
+    // printf("step2b\n");
     Matrix * m1 = get();
+    addTo_cnt(stats->consSum, SumMatrix(m1));
     increment_cnt(stats->consCount);
-    while (buf_size == 0 && i < LOOPS) 
+    while (buf_size == 0 && get_cnt(stats->consCount) < NUMBER_OF_MATRICES) 
       pthread_cond_wait(&full, &mutex);
     if(get_cnt(stats->consCount) >= NUMBER_OF_MATRICES) {
       pthread_cond_signal(&full);
@@ -129,17 +130,18 @@ void *cons_worker(void *args)
       break;
     }
     Matrix * m2 = get();
+    addTo_cnt(stats->consSum, SumMatrix(m2));
     increment_cnt(stats->consCount);
     
-    printf("fill_ptr: %d \n", fill_ptr);
-    printf("user_ptr: %d \n", use_ptr);
+    // printf("fill_ptr: %d \n", fill_ptr);
+    // printf("user_ptr: %d \n", use_ptr);
 
 
     Matrix * m3 = MatrixMultiply(m1, m2);
 
     while (m3 == NULL) {
       FreeMatrix(m2);
-      while (buf_size == 0 && i < LOOPS) 
+      while (buf_size == 0 && get_cnt(stats->consCount) < NUMBER_OF_MATRICES) 
         pthread_cond_wait(&full, &mutex); 
       if(get_cnt(stats->consCount) >= NUMBER_OF_MATRICES) {
         pthread_cond_signal(&full);
@@ -147,10 +149,11 @@ void *cons_worker(void *args)
         break;
       }
       m2 = get();
+      addTo_cnt(stats->consSum, SumMatrix(m2));
       increment_cnt(stats->consCount);
       m3 = MatrixMultiply(m1, m2);
     }
-
+    increment_cnt(stats->multCount);
     DisplayMatrix(m1, stdout);
     printf("    X\n");
     DisplayMatrix(m2, stdout);
@@ -163,14 +166,14 @@ void *cons_worker(void *args)
     FreeMatrix(m1);
 
     printf("consumed: %d\n", get_cnt(stats->consCount));
-    printf("fill_ptr-end: %d \n", fill_ptr);
-    printf("user_ptr-end: %d \n", use_ptr);
+    // printf("fill_ptr-end: %d \n", fill_ptr);
+    // printf("user_ptr-end: %d \n", use_ptr);
 
     // printf("consumed: %d\n", pcStats->consCount);
     pthread_cond_signal(&empty);
     pthread_mutex_unlock(&mutex);
   }
   
-  printf("con  returns --------------\n");
+  printf("----------con returns --------------\n");
   return 0;
 }
