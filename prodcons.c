@@ -30,10 +30,10 @@ int consuming = 0;
 
 
 // Define Locks and Condition variables here
-pthread_cond_t empty;// = PTHREAD_COND_INITIALIZER; //BB is empty.
-pthread_cond_t full;// = PTHREAD_COND_INITIALIZER;  //BB is full.
-pthread_mutex_t mutex;// = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t buflock;// = PTHREAD_MUTEX_INITIALIZER;  //Move a lock to get/put methods?
+pthread_cond_t empty = PTHREAD_COND_INITIALIZER; //BB is empty.
+pthread_cond_t full = PTHREAD_COND_INITIALIZER;  //BB is full.
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t buflock = PTHREAD_MUTEX_INITIALIZER;  //Move a lock to get/put methods?
 
 // Producer consumer data structures
 ProdConsStats pcStats;
@@ -49,8 +49,8 @@ int put(Matrix * mat)
   if (mat != NULL) {
     buffer[fill_ptr] = mat;
     use_ptr = fill_ptr; //Lock issue here, need to update the use pointer to use a made matrix.
-    
-    GenMatrix(buffer[fill_ptr]);    
+    printf("%d\n", fill_ptr);
+    // GenMatrix(buffer[fill_ptr]);    
     fill_ptr = (fill_ptr + 1) % MAX;  
     pthread_cond_signal(&full); //Room in buffer
     return 1;
@@ -66,37 +66,35 @@ Matrix * get()
   if (use_ptr < 2) {
     pthread_cond_signal(&empty); //Different condition? signal that there is nothing in buffer now.
   }
+  
+  DisplayMatrix(buffer[use_ptr], stdout);
   return tmp;
 }
 
 // Matrix PRODUCER worker thread
 void *prod_worker(void *counters)
 {
-  counters_t* c = (counters_t*)counters;
-  
+  counters_t *c = (counters_t*)counters;
   int i;
   for (i = 0; i < loops; i++) {
+    
     pthread_mutex_lock(&mutex);
     
-    while (!(fill_ptr < BOUNDED_BUFFER_SIZE)) {//This needs to be a different check.
+    while ((get_cnt(c->prod) - get_cnt(c->cons)) >= BOUNDED_BUFFER_SIZE) {//This needs to be a different check.
       pthread_cond_wait(&empty, &mutex); //Condition should be "there's room"
     }
     // printf("out of while\n");
-    Matrix * mat = AllocMatrix(2, 2);  //Get matrix mode here!
+    Matrix * mat = GenMatrixRandom();  //Get matrix mode here!
+    addTo_cnt(c->prodSum, SumMatrix(mat));
+    
     put(mat);
+    increment_cnt(c->prod);
     if (fill_ptr > 1) {
         pthread_cond_signal(&full);
     }
-    
-    pthread_mutex_unlock(&mutex);
-    increment_cnt(c->prod);
     printf("produced: %d\n", get_cnt(c->prod));
+    pthread_mutex_unlock(&mutex);
   }
-  // pthread_cond_wait(&empty, &mutex);
-  // void *status = NULL;
-  pthread_join(pthread_self(), NULL);
-  pthread_exit(NULL);
-  // printf("done2");
   return 0;
 }
 
@@ -105,43 +103,46 @@ void *cons_worker(void *counters)
 {
   counters_t* c = (counters_t*)counters;
   int i;
-   for (i = 0; i < loops; i++) 
+  for (i = 0; i < loops; i++) 
   {
     pthread_mutex_lock(&mutex);
-    while (!(fill_ptr >= 2)) 
+    Matrix *m1, *m2, *m3;
+    while (fill_ptr == 0) 
       pthread_cond_wait(&full, &mutex); //Condition is "2 or more matrix in bb"
-    Matrix * m1 = get(); //Need to get two matrices! and multiply/ return them...
+    m1 = get(); //Need to get two matrices! and multiply/ return them...
     increment_cnt(c->cons);
-    Matrix * m2 = get();
+    addTo_cnt(c->conSum, SumMatrix(m1));
+    m2 = get();
     increment_cnt(c->cons);
-    if(m1->rows != m2->cols) {
+    m3 = MatrixMultiply(m1, m2);
+    if(m3 == NULL) {
       FreeMatrix(m2);
       m2 = get();
       increment_cnt(c->cons);
+      m3 = MatrixMultiply(m1, m2);
     }
+    addTo_cnt(c->conSum, SumMatrix(m1));
     
-    Matrix * m3 = MatrixMultiply(m1, m2);
-    if (m3 != NULL){
-      increment_cnt(c->mult);
-      DisplayMatrix(m1, stdout);
-      printf("    X\n");
-      DisplayMatrix(m2, stdout);
-      printf("    =\n");
-      DisplayMatrix(m3, stdout);
-      printf("\n");
-    }
+    increment_cnt(c->mult);
+    DisplayMatrix(m1, stdout);
+    printf("    X\n");
+    DisplayMatrix(m2, stdout);
+    printf("    =\n");
+    DisplayMatrix(m3, stdout);
+    printf("\n");
+    
     printf("consumed: %d\n", get_cnt(c->cons));
     FreeMatrix(m3);
     FreeMatrix(m2);
     FreeMatrix(m1);
- 
-    pthread_mutex_unlock(&mutex);
 
-    pthread_cond_signal(&empty);
-  }
+
+    pthread_cond_signal(&empty); 
+    pthread_mutex_unlock(&mutex);
+}
   // pthread_cond_wait(&full, &mutex);
   printf("done\n");
-  pthread_exit(NULL);
+  // pthread_exit(args);
   // pthread_join(pthread_self(), NULL);
   // printf("done\n");
   return 0;

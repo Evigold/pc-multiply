@@ -26,9 +26,33 @@ void init_cnt(counter_t *c)  {
   pthread_mutex_init(&c->lock, NULL);
 }
 
+void init_cnts(counters_t * c) {
+  counter_t prodCount;
+  counter_t conCount;
+  counter_t prodSum;
+  counter_t conSum;
+  counter_t multCount;
+  init_cnt(&prodCount);
+  init_cnt(&conCount);
+  init_cnt(&prodSum);
+  init_cnt(&conSum);
+  init_cnt(&multCount);
+  c->cons = &conCount;
+  c->prod = &prodCount;
+  c->conSum = &conSum;
+  c->prodSum = &prodSum;
+  c->mult = &multCount;
+}
+
 void increment_cnt(counter_t *c)  {
   pthread_mutex_lock(&c->lock);
   c->value++;
+  pthread_mutex_unlock(&c->lock);
+}
+
+void addTo_cnt(counter_t *c, int a) {
+  pthread_mutex_lock(&c->lock);
+  c->value += a;
   pthread_mutex_unlock(&c->lock);
 }
 
