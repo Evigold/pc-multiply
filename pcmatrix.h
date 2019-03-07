@@ -8,17 +8,17 @@
  */
 
 // Number of worker threads - NUMWORK producers, NUMWORK consumers
-#define NUMWORK 1
+#define NUMWORK 20
 
 // Constant for enabling and disabling DEBUG output
 #define OUTPUT 0
 
 // Size of the buffer ARRAY  (see ch. 30, section 2, producer/consumer)
-#define MAX 10
+#define MAX 200
 int BOUNDED_BUFFER_SIZE;
 
 // Number of matrices to produce/consume
-#define LOOPS 120
+#define LOOPS 1200
 int NUMBER_OF_MATRICES;
 
 // MATRIX MODE FLAG
