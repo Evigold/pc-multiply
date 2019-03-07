@@ -82,13 +82,13 @@ void *prod_worker(void *args)
   while(get_cnt(stats->prodCount) < NUMBER_OF_MATRICES) {
     pthread_mutex_lock(&mutex);
     while (buf_size == MAX) {//This needs to be a different check.
-      pthread_cond_wait(&empty, &mutex); //Condition should be "there's room"
+      if(get_cnt(stats->prodCount) >= NUMBER_OF_MATRICES) {
+        pthread_cond_signal(&full);
+        pthread_mutex_unlock  (&mutex);
+        goto end;
+      }pthread_cond_wait(&empty, &mutex); //Condition should be "there's room"
     }
-    if(get_cnt(stats->prodCount) >= NUMBER_OF_MATRICES) {
-      pthread_cond_signal(&full);
-      pthread_mutex_unlock  (&mutex);
-      goto end;
-    }
+    
     Matrix * mat = GenMatrixRandom();  //Get matrix mode here!
     addTo_cnt(stats->prodSum, SumMatrix(mat));
     put(mat);
@@ -108,24 +108,25 @@ void *cons_worker(void *args)
   while(get_cnt(stats->consCount) < NUMBER_OF_MATRICES) {
     pthread_mutex_lock(&mutex);
     
-    while (buf_size == 0 && get_cnt(stats->consCount) < NUMBER_OF_MATRICES) {
-      pthread_cond_wait(&full, &mutex); //Condition is "2 or more matrix in bb"
-    }
-    if(get_cnt(stats->consCount) >= NUMBER_OF_MATRICES) {
-      pthread_cond_signal(&full);
-      pthread_mutex_unlock  (&mutex);
-      goto end;
+    while (buf_size == 0) { 
+      if(get_cnt(stats->consCount) >= NUMBER_OF_MATRICES) {
+        pthread_cond_signal(&full);
+        pthread_mutex_unlock  (&mutex);
+        goto end;
+      }
+      pthread_cond_wait(&full, &mutex); 
     }
     
     Matrix * m1 = get();
     addTo_cnt(stats->consSum, SumMatrix(m1));
     increment_cnt(stats->consCount);
-    while (buf_size == 0 && get_cnt(stats->consCount) < NUMBER_OF_MATRICES) 
-      pthread_cond_wait(&full, &mutex);
-    if(get_cnt(stats->consCount) >= NUMBER_OF_MATRICES) {
-      pthread_cond_signal(&full);
-      pthread_mutex_unlock  (&mutex);
-      goto end;
+    while (buf_size == 0) { 
+      if(get_cnt(stats->consCount) >= NUMBER_OF_MATRICES) {
+        pthread_cond_signal(&full);
+        pthread_mutex_unlock  (&mutex);
+        goto end;
+      }
+      pthread_cond_wait(&full, &mutex); 
     }
     
     Matrix * m2 = get();
@@ -137,12 +138,13 @@ void *cons_worker(void *args)
     while (m3 == NULL) {
       FreeMatrix(m2);
     
-      while (buf_size == 0 && get_cnt(stats->consCount) < NUMBER_OF_MATRICES) 
+      while (buf_size == 0) { 
+        if(get_cnt(stats->consCount) >= NUMBER_OF_MATRICES) {
+          pthread_cond_signal(&full);
+          pthread_mutex_unlock  (&mutex);
+          goto end;
+        }
         pthread_cond_wait(&full, &mutex); 
-      if(get_cnt(stats->consCount) >= NUMBER_OF_MATRICES) {
-        pthread_cond_signal(&full);
-        pthread_mutex_unlock  (&mutex);
-        goto end;
       }
     
       m2 = get();
