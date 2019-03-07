@@ -122,7 +122,10 @@ int main(int argc, char *argv[])
     pthread_create(&prod[i], NULL, prod_worker, &prodCount);
     pthread_create(&con[i], NULL, cons_worker(&conCount), &pcStats);
   }
-  
+  for(int i = 0; i < NUMWORK; i++) {
+    pthread_join(prod[i], NULL);
+    pthread_join(con[i], NULL);
+  }
   printf("Sum of Matrix elements --> Produced=%d = Consumed=%d\n", prodCount.value, conCount.value);
   printf("Matrices produced=%d consumed=%d multiplied=%d\n", prodtot, constot, consmul);
 
