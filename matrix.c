@@ -42,7 +42,6 @@ Matrix * AllocMatrix(int r, int c)
 
 void FreeMatrix(Matrix * mat)
 {
-  printf("mat += %p", mat);
   int r = mat->rows;
   int **a = mat->m;
   int i;
